@@ -3,16 +3,6 @@
 
 #load in required packages 
 options(repos = c(REPO_NAME = "https://packagemanager.rstudio.com/all/latest"))
-install.packages('sp')
-install.packages(c("Rcpp", "tseries", "lmtest", "zoo", "ggplot2"))
-install.packages("forecast")
-install.packages('imputeTS')
-install.packages('ggplot2')
-install.packages('ggmap')
-install.packages('data.table')
-install.packages('cowplot')
-install.packages('corrplot')
-install.packages('writexl')
 library(readxl)
 library(writexl)
 library(sp)         #tested with v1.3-2
@@ -22,7 +12,6 @@ library(ggmap)      #tested with v3.0.0
 library(data.table) #tested with v1.12.8
 library(cowplot)    #tested with v0.9.4
 library(corrplot)   #tested with v0.84
-#library(keras)      #REQUIRES TENSORFLOW INSTALL (GPU). tested with v2.2.5.0
 
 #source functions from DLCAnalyzer_Functions_final.r (DOI:10.1038/s41386-020-0776-y)
   # Make sure the DLCAnalyzer_Functions_final.R is downloaded and change path_name to current path 

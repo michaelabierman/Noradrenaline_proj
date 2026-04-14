@@ -1,8 +1,6 @@
 # To use cleaning scripts from (Sturman et al, 2020 (DOI:10.1038/s41386-020-0776-y) need to convert
 # column names to DLC Format
 
-library(dplyr)
-library(openxlsx)
 
 # Paths
 input_folder  <- ""     # folder with subsetted CSV/XLSX files
