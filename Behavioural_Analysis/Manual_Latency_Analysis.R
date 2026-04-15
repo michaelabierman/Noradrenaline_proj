@@ -18,8 +18,8 @@ library(tidyverse)
 library(viridis)
 
 #Load in csv of latency data
-UM_90 <- read.csv("All_manual_lat_beh.csv") #
-UM_90 <- UM_90 %>% filter (Playbacks == 90) #ensure only those with 90 trials 
+UM_90 <- read.csv("All_manual_lat_beh.csv") 
+UM_90 <- UM_90 %>% filter (Playbacks == 90) # ensure only those with 90 trials 
 UM_90 <- UM_90 %>% select(-X.1, -X)
 
 # Subset to movements and vocalizations 
@@ -77,6 +77,7 @@ UM_manual_move$Behaviour <- factor(
   levels = c("Short Hop", "Long Hop", "Beak Swipe")
 )
 
+#Fig 1b
 ggplot(UM_manual_move, aes(x = Behaviour, y = Latencies, fill = Condition, color = Condition)) +
   
   # Mean bars
@@ -134,6 +135,7 @@ UM_manual_vocal$Behaviour <- factor(
   levels = c("Short Call", "Long Call", "Singing")
 )
 
+#Fig 1c
 ggplot(UM_manual_vocal, aes(x = Behaviour, y = Latencies, fill = Condition, color = Condition)) +
   
   # Mean bars
