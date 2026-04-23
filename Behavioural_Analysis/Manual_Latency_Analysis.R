@@ -27,7 +27,6 @@ UM_manual_move <- UM_90 %>% filter(Behaviour == "Long Hop" | Behaviour =="Short 
 
 UM_manual_vocal <- UM_90 %>% filter(Behaviour == "Singing" | Behaviour =="Short Call" | Behaviour =="Long Call")
 
-
 ##Stats for movements 
 hist(UM_manual_move$Latencies)
 
@@ -85,8 +84,8 @@ ggplot(UM_manual_move, aes(x = Behaviour, y = Latencies, fill = Condition, color
     fun = mean,
     geom = "bar",
     position = dodge,
-    alpha = 0.5,
-    width = 0.4
+    alpha = 0.7,
+    width = 0.5
   ) +
   
   # Error bars
@@ -95,12 +94,12 @@ ggplot(UM_manual_move, aes(x = Behaviour, y = Latencies, fill = Condition, color
     fun.data = mean_se,
     geom = "errorbar",
     position = dodge,
-    width = 0.1
+    width = 0.2
   ) +
   
   # Raw data
   geom_jitter(
-    size = 3,
+    size = 2,
     position = position_jitterdodge(
       jitter.width = 0.3,
       dodge.width = 0.6
@@ -114,17 +113,30 @@ ggplot(UM_manual_move, aes(x = Behaviour, y = Latencies, fill = Condition, color
     breaks = seq(0, 90, by = 15)
   )+
   theme(
-    text = element_text(size = 14, face = "bold"),
-    axis.text.x = element_text(size = 14),
-    legend.position = "right"
+    text = element_text(size = 14, face = "bold", color = "black"),
+    axis.text.x = element_text(size = 10, color = "black"),
+    legend.position = "none",
+    panel.spacing = unit(1.5, "lines"),
+    panel.grid = element_blank(),
   ) +
   
   labs(
     x = NULL,
-    y = "Latencies",
+    y = "Latencies (Trial #)",
     fill = "Condition"
   ) +
-  
+  theme(
+    legend.position = "none",
+    legend.title = element_text(size = 11, face = "bold"),
+    legend.text = element_text(size = 10, face = "bold"),
+    axis.title = element_text(size = 14, face = "bold"),
+    axis.text = element_text(size = 10, face = "bold"),
+    strip.background = element_blank(),
+    strip.text = element_text(face = "bold", size = 11),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    axis.line = element_line(colour = "black")
+  )+
   scale_fill_manual(values = c("N" = "orange", "F" = "purple")) +
   scale_color_manual(values = c("N" = "orange3", "F" = "purple"))
 
@@ -143,8 +155,8 @@ ggplot(UM_manual_vocal, aes(x = Behaviour, y = Latencies, fill = Condition, colo
     fun = mean,
     geom = "bar",
     position = dodge,
-    alpha = 0.5,
-    width = 0.4
+    alpha = 0.7,
+    width = 0.5
   ) +
   
   # Error bars
@@ -153,12 +165,12 @@ ggplot(UM_manual_vocal, aes(x = Behaviour, y = Latencies, fill = Condition, colo
     fun.data = mean_se,
     geom = "errorbar",
     position = dodge,
-    width = 0.1
+    width = 0.2
   ) +
   
   # Raw data
   geom_jitter(
-    size = 3,
+    size = 2,
     position = position_jitterdodge(
       jitter.width = 0.3,
       dodge.width = 0.6
@@ -172,17 +184,29 @@ ggplot(UM_manual_vocal, aes(x = Behaviour, y = Latencies, fill = Condition, colo
     breaks = seq(0, 90, by = 15)
   )+
   theme(
-    text = element_text(size = 14, face = "bold"),
-    axis.text.x = element_text(size = 14),
-    legend.position = "right"
+    text = element_text(size = 14, face = "bold", color = "black"),
+    axis.text.x = element_text(size = 10, color = "black"),
+    legend.position = "none",
+    panel.spacing = unit(1.5, "lines"),
+    panel.grid = element_blank(),
   ) +
   
   labs(
     x = NULL,
-    y = "Latencies",
+    y = "Latencies (Trial #)",
     fill = "Condition"
   ) +
-  
+  theme(
+    legend.position = "right",
+    legend.title = element_text(size = 11, face = "bold"),
+    legend.text = element_text(size = 10, face = "bold"),
+    axis.title = element_text(size = 14, face = "bold"),
+    axis.text = element_text(size = 10, face = "bold"),
+    strip.background = element_blank(),
+    strip.text = element_text(face = "bold", size = 11),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    axis.line = element_line(colour = "black")
+  )+
   scale_fill_manual(values = c("N" = "orange", "F" = "purple")) +
   scale_color_manual(values = c("N" = "orange3", "F" = "purple"))
-
