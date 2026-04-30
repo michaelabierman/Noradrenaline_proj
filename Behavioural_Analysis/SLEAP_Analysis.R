@@ -71,6 +71,11 @@ Familiar_ex <- "bl143or73"
 Novel_ex <- "bl186gr54"
 
 
+final_birds <- Inj_Birds_all %>% 
+  select(BirdID, Condition, Inj_Lesion) %>% 
+  distinct()
+write.csv(final_birds, "/Users/michaelabierman/Downloads/LAB/Daria/Results/Figures/Neural Figs/final_birds.csv")
+
 ##Calculate speed on interpolated values
   #In processing script was done on raw - change to interpolated for continious data  
 fps <- 30

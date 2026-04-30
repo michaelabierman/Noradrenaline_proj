@@ -339,7 +339,7 @@ all_metrics_30sec_simp <- all_metrics_inj_bin1_30 %>% filter(Inj_Lesion != "anti
 
 #PCA 
 ###PCA on all sleap metrics 
-metrics_30sec_simp <- all_metrics_inj_simp_bin1_30 %>%
+metrics_30sec_simp <- all_metrics_30sec_simp %>%
   select(
     mean_speed,
     head_var,
@@ -358,7 +358,7 @@ summary(pca_res_30sec_simp)
 
 pca_scores_30sec_simp <- as.data.frame(pca_res_30sec_simp$x) %>%
   bind_cols(
-    all_metrics_inj_simp_bin1_30 %>%
+    all_metrics_30sec_simp %>%
       select(BirdID, Condition, time_bin_30sec, Inj_Lesion) %>%
       slice(rownames(metrics_30sec_simp) |> as.integer())
   )
@@ -367,6 +367,61 @@ loadings_30sec_simp <- as.data.frame(pca_res_30sec_simp$rotation)
 loadings_30sec_simp
 
 screeplot(pca_res_30sec_simp, type = "lines", main = "Scree Plot (Base R)")
+
+variance <- pca_res_30sec_simp$sdev^2
+pve <- variance / sum(variance)
+
+scree_df <- data.frame(
+  PC = 1:length(pve),
+  variance = pve
+)
+#Scree plot ()
+ggplot(scree_df, aes(x = PC, y = variance)) +
+  geom_line(color = "steelblue", linewidth = 0.8) +
+  geom_bar(
+    stat = "summary",
+    fun = "mean",
+    alpha = 0.8,
+    fill = "steelblue"
+  ) +
+  geom_point(color = "steelblue", size = 3) +
+  scale_x_continuous(breaks = 1:nrow(scree_df)) +
+  labs(
+    x = "Principal Component",
+    y = "Proportion of Variance Explained",
+    title = ""
+  ) +
+  theme_minimal()+
+  theme(
+    legend.position = "none",
+    legend.title = element_text(size = 11, face = "bold"),
+    legend.text = element_text(size = 10, face = "bold"),
+    axis.title = element_text(size = 14, face = "bold"),
+    axis.text = element_text(size = 10, face = "bold"),
+    strip.background = element_blank(),
+    strip.text = element_text(face = "bold", size = 11),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    axis.line = element_line(colour = "black")
+  )
+
+#Vector bi-plot ()
+autoplot(pca_res_30sec_simp, data = all_metrics_30sec_simp,
+         loadings = TRUE, loadings.label = TRUE, loadings.label.size = 4) +
+  theme_minimal() +
+  theme(
+    legend.position = "none",
+    legend.title = element_text(size = 11, face = "bold"),
+    legend.text = element_text(size = 10, face = "bold"),
+    axis.title = element_text(size = 14, face = "bold"),
+    axis.text = element_text(size = 10, face = "bold"),
+    strip.background = element_blank(),
+    strip.text = element_text(face = "bold", size = 11),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    axis.line = element_line(colour = "black")
+  )+
+  geom_point(size = 1, alpha = 0.3)
 
 
 # First 3 min PCA stats ---------------------------------------------------
