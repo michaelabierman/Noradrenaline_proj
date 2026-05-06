@@ -335,12 +335,13 @@ ggplot(Circ_example_birds, aes(x=adj_frame, y=speed_head_psec, group=Condition, 
   )
 
 
-#Fig 3b 
+#Fig 4b 
 ggplot(Circ_example_birds_bin1, aes(x=adj_frame, y=speed_head_psec, color = Condition))+
   geom_line()+
-  facet_wrap(~Condition, ncol=2)+
+  facet_wrap(~Condition, ncol=1)+
   theme_minimal()+
   labs(x="Frame", y="Head speed (cm/sec)")+
+  xlim(-1,5095)+
   theme(
     legend.position='none',
     panel.grid = element_blank(),
@@ -350,7 +351,7 @@ ggplot(Circ_example_birds_bin1, aes(x=adj_frame, y=speed_head_psec, color = Cond
     #strip.text = element_text(size = 12, face = "bold"),
     strip.text = element_blank(),
     strip.text.y = element_text(angle = 0, size = 12, face = "bold"))+
-  scale_color_manual(values = c("F"="darkgrey", "N" = "darkgrey"))
+  scale_color_manual(values = c("F"="purple", "N" = "orange"))
 
 
 
@@ -378,12 +379,16 @@ concave_hulls_df <- Circ_example_birds_bin1 %>%
 
 concave_hulls_df$Condition <- factor(concave_hulls_df$Condition, 
                                      levels = c("N", "F"))
+Circ_example_birds_bin1$Condition<-factor(Circ_example_birds_bin1$Condition, 
+                                levels = c("N", "F"))
 
 full_grid <- expand.grid(
   x_bin = seq(10 + bin_size/2, 30, by = bin_size),
   y_bin = seq(-20 + bin_size/2, 0, by = bin_size),
   Condition = unique(entropy_df$Condition)
 )
+
+full_grid$Condition <- factor(full_grid$Condition,levels = c("N", "F"))
 
 ggplot() +
   geom_tile(
@@ -401,14 +406,14 @@ ggplot() +
     alpha = 1
   ) +
   geom_polygon(
-    data = concave_hulls_df %>% filter(Condition == "F"),
+    data = concave_hulls_df %>% filter(Condition == "N"),
     aes(x = x, y = y, fill = Condition),
     color = "black",
     linewidth = 1.2,
     alpha = 0.25
   ) +
   geom_polygon(
-    data = concave_hulls_df %>% filter(Condition == "N"),
+    data = concave_hulls_df %>% filter(Condition == "F"),
     aes(x = x, y = y, fill = Condition),
     color = "black",
     linewidth = 1.2,

@@ -197,7 +197,7 @@ ggplot(UM_manual_vocal, aes(x = Behaviour, y = Latencies, fill = Condition, colo
     fill = "Condition"
   ) +
   theme(
-    legend.position = "right",
+    legend.position = "none",
     legend.title = element_text(size = 11, face = "bold"),
     legend.text = element_text(size = 10, face = "bold"),
     axis.title = element_text(size = 14, face = "bold"),

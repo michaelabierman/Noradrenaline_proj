@@ -229,10 +229,294 @@ circular_variance_inj_30sec <- Inj_Birds_all_30sec %>%
   group_by(BirdID, Condition, Inj_Lesion, time_bin_30sec) %>%
   summarise(head_var = var.circular(circular(head_angle), na.rm=TRUE), .groups = "drop")
 
+
+
+# CV stats 3 mins only  ---------------------------------------------------
+
+
+circular_variance_inj_30sec_3min <- circular_variance_inj_30sec %>% 
+                                        filter(time_bin_30sec<7 
+                                            & Inj_Lesion != "anti-DBH-SAP_Yes")
+
+circular_variance_inj_30sec_3min$time_bin_30sec <- factor(circular_variance_inj_30sec_3min$time_bin_30sec, ordered=TRUE)
+
+##Full Model with nested Inj_Lesion 
+Inj_var_model_3min <- glmmTMB(head_var ~Condition * time_bin_30sec * Inj_Lesion + (1|BirdID),
+                         family = beta_family(link = "logit"), data = circular_variance_inj_30sec_3min,
+                         control = glmmTMBControl(optimizer = optim, optArgs = list(method = "BFGS")))
+
+Anova(Inj_var_model_3min)
+summary(Inj_var_model_3min)
+
+#residuals
+simulationOutput <- simulateResiduals(fittedModel = Inj_var_model_3min, plot = TRUE)
+plot(residuals(Inj_var_model_3min))
+qqnorm(resid(Inj_var_model_3min))
+qqline(resid(Inj_var_model_3min))
+
+
+### INJ Raw points and model predictions plot ######### 
+emm_var_inj <- emmeans(
+  Inj_var_model_3min,
+  ~ Condition * time_bin_30sec | Inj_Lesion,
+  type = "response"
+)
+
+emm_var_inj_df <- as.data.frame(emm_var_inj)
+
+ggplot(circular_variance_inj_30sec_3min,
+       aes(x = time_bin_30sec, y = head_var, color = Condition)) +
+  
+  # Raw data
+  geom_jitter(
+    aes(group = BirdID),
+    width = 0.15,
+    alpha = 0.3,
+    size = 1
+  ) +
+  
+  geom_line(
+    aes(group = BirdID),
+    alpha = 0.15,
+    linewidth = 0.4
+  ) +
+  
+  # Model-predicted means
+  geom_line(
+    data = emm_var_inj_df,
+    aes(y = response, group = Condition),
+    linewidth = 1.2
+  ) +
+  
+  # 95% CI ribbon (asymptotic)
+  geom_ribbon(
+    data = emm_var_inj_df,
+    aes(
+      y = response,
+      ymin = asymp.LCL,
+      ymax = asymp.UCL,
+      fill = Condition,
+      group = Condition
+    ),
+    alpha = 0.25,
+    color = NA
+  ) +
+  
+  # Separate panels by injection/lesion group
+  facet_wrap(~ Inj_Lesion, nrow = 1) +
+  
+  scale_color_manual(values = c("F"="purple", "N"="orange"))+
+  scale_fill_manual(values = c("F"="purple", "N"="orange"))+
+  labs(x="Time bin (3min)", y="CV of Head Angles")+
+  theme_classic()+
+  theme(
+    legend.position = "none",
+    legend.title = element_text(size = 11, face = "bold"),
+    legend.text = element_text(size = 10, face = "bold"),
+    axis.title = element_text(size = 14, face = "bold"),
+    axis.text = element_text(size = 10, face = "bold"),
+    strip.background = element_blank(),
+    strip.text = element_text(face = "bold", size = 11),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    axis.line = element_line(colour = "black")
+  )
+
+
+###  POST HOC models ##############
+DBH_no <- circular_variance_inj_30sec_3min %>% filter(Inj_Lesion == "anti-DBH-SAP_No")
+IgG <- circular_variance_inj_30sec_3min %>% filter(Inj_Lesion == "IgG-SAP_No")
+
+
+##Cir var stats 
+#######DBH no 
+DBH_no$time_bin_30sec <- as.factor(DBH_no$time_bin_30sec) 
+
+dbh_no_var_model <- glmmTMB(head_var ~Condition * time_bin_30sec + (1|BirdID),
+                            family = beta_family(link = "logit"), data = DBH_no,
+                            control = glmmTMBControl(optimizer = optim, optArgs = list(method = "BFGS")))
+
+Anova(dbh_no_var_model)
+
+summary(dbh_no_var_model)
+
+#residuals
+plot(residuals(dbh_no_var_model))
+qqnorm(resid(dbh_no_var_model))
+qqline(resid(dbh_no_var_model))
+
+pairs(emmeans(dbh_no_var_model, ~ Condition|time_bin_30sec), adjust = "holm")
+
+
+#####IgG
+IgG$time_bin_30sec <- as.factor(IgG$time_bin_30sec)
+
+igg_var_model <- glmmTMB(head_var ~Condition * time_bin_30sec + (1|BirdID),
+                         family = beta_family(link = "logit"), data =IgG,
+                         control = glmmTMBControl(optimizer = optim, optArgs = list(method = "BFGS")))
+
+Anova(igg_var_model)
+
+summary(igg_var_model)
+
+#residuals
+plot(residuals(igg_var_model))
+qqnorm(resid(igg_var_model))
+qqline(resid(igg_var_model))
+
+pairs(emmeans(igg_var_model, ~ Condition | time_bin_3min), adjust = "holm")
+
+
+
+
+
+
+
+# area 30 sec bins --------------------------------------------------------
 #Area 30 sec bins 
 Concave_hull_areas_3min_inj_30 <- Inj_Birds_all_30sec %>%
   group_by(BirdID, Condition, time_bin_30sec, Inj_Lesion) %>%
   summarise(area = concave_hull_area(across(c(x_head, y_head_neg))))  # Correct way to pass data
+
+Concave_hull_areas_3min_inj_30_3min <- Concave_hull_areas_3min_inj_30 %>% 
+  filter(time_bin_30sec<7 
+         & Inj_Lesion != "anti-DBH-SAP_Yes")
+Concave_hull_areas_3min_inj_30_3min$time_bin_30sec <- factor(Concave_hull_areas_3min_inj_30_3min$time_bin_30sec, ordered=TRUE)
+
+
+concave_hull_model_inj_3min <- glmmTMB((area^(1/3)) ~ Condition * time_bin_30sec * Inj_Lesion + (1|BirdID),
+                                  family = gaussian(link = "identity"), data = Concave_hull_areas_3min_inj_30_3min)
+
+simulationOutput <- simulateResiduals(fittedModel = concave_hull_model_inj_3min, plot = TRUE)
+Anova(concave_hull_model_inj_3min)
+summary(concave_hull_model_inj_3min)
+
+#residuals
+plot(residuals(concave_hull_model_inj_3min))
+qqnorm(resid(concave_hull_model_inj_3min))
+qqline(resid(concave_hull_model_inj_3min))
+
+
+
+emm_area_inj <- emmeans(
+  concave_hull_model_inj_3min,
+  ~ Condition * time_bin_30sec | Inj_Lesion,
+  type = "response"
+)
+
+emm_area_inj_df <- as.data.frame(emm_area_inj)
+
+ggplot(Concave_hull_areas_3min_inj_30_3min,
+       aes(x = time_bin_30sec, y = area^(1/3), color = Condition)) +
+  
+  # Raw data
+  geom_jitter(
+    aes(group = BirdID),
+    width = 0.15,
+    alpha = 0.3,
+    size = 1
+  ) +
+  
+  geom_line(
+    aes(group = BirdID),
+    alpha = 0.15,
+    linewidth = 0.4
+  ) +
+  
+  # Model-predicted means
+  geom_line(
+    data = emm_area_inj_df,
+    aes(y = response, group = Condition),
+    linewidth = 1.2
+  ) +
+  
+  # 95% CI ribbon (asymptotic)
+  geom_ribbon(
+    data = emm_area_inj_df,
+    aes(
+      y = response,
+      ymin = lower.CL,
+      ymax = upper.CL,
+      fill = Condition,
+      group = Condition
+    ),
+    alpha = 0.25,
+    color = NA
+  ) +
+  
+  # Separate panels by injection/lesion group
+  facet_wrap(~ Inj_Lesion, nrow = 1) +
+  
+  scale_color_manual(values = c("F"="purple", "N"="orange"))+
+  scale_fill_manual(values = c("F"="purple", "N"="orange"))+
+  labs(x="Time bin (min)", y="Area")+
+  theme_classic()+
+  theme(
+    legend.position = "none",
+    legend.title = element_text(size = 11, face = "bold"),
+    legend.text = element_text(size = 10, face = "bold"),
+    axis.title = element_text(size = 14, face = "bold"),
+    axis.text = element_text(size = 10, face = "bold"),
+    strip.background = element_blank(),
+    strip.text = element_text(face = "bold", size = 11),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    axis.line = element_line(colour = "black")
+  )
+
+
+
+##DBH no lesion 
+hull_area_DBH_no <- Concave_hull_areas_3min_inj_30_3min %>% filter(Inj_Lesion =="anti-DBH-SAP_No")
+hull_area_DBH_no$time_bin_30sec <- factor(hull_area_DBH_no$time_bin_30sec, ordered = TRUE) 
+
+##IgG 
+hull_area_IgG <- Concave_hull_areas_3min_inj_30_3min %>% filter(Inj_Lesion =="IgG-SAP_No")
+hull_area_IgG$time_bin_30sec <- factor(hull_area_IgG$time_bin_30sec, ordered = TRUE) 
+
+
+##DBHno _____________
+hist(hull_area_DBH_no$area)
+hist(sqrt(hull_area_DBH_no$area))
+hist(hull_area_DBH_no$area^(1/3))
+hist(log(hull_area_DBH_no$area))
+
+hull_model_DBH_no <- glmmTMB(log(area) ~ Condition * time_bin_30sec + (1|BirdID),
+                             family = gaussian(link = "identity"), data = hull_area_DBH_no)
+
+
+simulationOutput <- simulateResiduals(fittedModel = hull_model_DBH_no, plot = TRUE)
+Anova(hull_model_DBH_no)
+summary(hull_model_DBH_no)
+pairs(emmeans(hull_model_DBH_no, ~ Condition | time_bin_30sec), adjust = "fdr")
+
+
+#residuals
+plot(residuals(hull_model_DBH_no))
+qqnorm(resid(hull_model_DBH_no))
+qqline(resid(hull_model_DBH_no))
+
+##IgG 
+hull_model_IgG <- glmmTMB((area^(1/3)) ~ Condition * time_bin_30sec + (1|BirdID),
+                          family = gaussian(link = "identity"), data = hull_area_IgG)
+
+Anova(hull_model_IgG)
+summary(hull_model_IgG)
+pairs(emmeans(hull_model_IgG, ~ Condition | time_bin_3min), adjust = "fdr")
+
+
+#residuals
+plot(residuals(hull_model_IgG))
+qqnorm(resid(hull_model_IgG))
+qqline(resid(hull_model_IgG))
+
+
+
+
+
+
+# Entropy 30 sec ----------------------------------------------------------
+
 
 #Entropy 30 sec bins 
 ##Inj 
@@ -312,6 +596,129 @@ compute_spatial_entropy_time_inj <- function(data, grid_width, grid_height, grid
 
 Inj_int_ent_30sec <- compute_spatial_entropy_time_inj(Inj_Birds_all_30sec, grid_width = 40, grid_height = 21, grid_size = grid_size)
 
+# Inj Birds Entropy stats -------------------------------------------------
+
+hist(Inj_int_ent_30sec$shannon_entropy)
+
+Inj_int_ent_30sec$time_bin_30sec <- factor(Inj_int_ent_30sec$time_bin_30sec, ordered = TRUE)
+
+Inj_int_ent_30sec_3min <- Inj_int_ent_30sec %>% filter(
+                            time_bin_30sec<7 & Inj_Lesion !="anti-DBH-SAP_Yes"
+)
+
+Inj_raw_ent_model_3min <- glmmTMB(shannon_entropy ~ Condition * time_bin_30sec * Inj_Lesion + (1|BirdID), 
+                             family = gaussian(link=identity), data =Inj_int_ent_30sec_3min)
+
+Anova(Inj_raw_ent_model_3min)
+summary(Inj_raw_ent_model_3min)
+
+#residuals
+simulationOutput <- simulateResiduals(fittedModel = Inj_raw_ent_model_3min, plot = TRUE)
+
+plot(residuals(Inj_raw_ent_model_3min))
+qqnorm(resid(Inj_raw_ent_model_3min))
+qqline(resid(Inj_raw_ent_model_3min)) 
+
+#Predicted and raw points plot ########
+emm_ent_inj <- emmeans(
+  Inj_raw_ent_model_3min,
+  ~ Condition * time_bin_30sec | Inj_Lesion
+)
+
+emm_df_ent_inj <- as.data.frame(emm_ent_inj)
+
+ggplot(Inj_int_ent_30sec_3min,
+       aes(x = time_bin_30sec, y = shannon_entropy, color = Condition)) +
+  
+  # Raw data
+  geom_jitter(
+    aes(group = BirdID),
+    width = 0.15,
+    alpha = 0.3,
+    size = 1
+  ) +
+  
+  geom_line(
+    aes(group = BirdID),
+    alpha = 0.15,
+    linewidth = 0.4
+  ) +
+  
+  # Model-predicted means
+  geom_line(
+    data = emm_df_ent_inj,
+    aes(y = emmean, group = Condition),
+    linewidth = 1.2
+  ) +
+  
+  # 95% CI ribbon 
+  geom_ribbon(
+    data = emm_df_ent_inj,
+    aes(
+      y = emmean,
+      ymin = lower.CL,
+      ymax = upper.CL,
+      fill = Condition,
+      group = Condition
+    ),
+    alpha = 0.25,
+    color = NA
+  ) +
+  facet_wrap(~Inj_Lesion)+
+  labs(x="Time bin (3min)", y="Shannon Entropy")+
+  scale_color_manual(values = c("F"="purple", "N"="orange"))+
+  scale_fill_manual(values = c("F"="purple", "N"="orange"))+
+  theme_classic()+
+  theme(
+    legend.position = "none",
+    legend.title = element_text(size = 11, face = "bold"),
+    legend.text = element_text(size = 10, face = "bold"),
+    axis.title = element_text(size = 14, face = "bold"),
+    axis.text = element_text(size = 10, face = "bold"),
+    strip.background = element_blank(),
+    strip.text = element_text(face = "bold", size = 11),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    axis.line = element_line(colour = "black")
+  )
+
+
+# Post HOC models ---------------------------------------------------------
+ent_IgG <- Inj_int_ent_30sec_3min %>% filter(Inj_Lesion == "IgG-SAP_No")
+ent_IgG$time_bin_30sec <- factor(ent_IgG$time_bin_30sec, ordered = TRUE)
+
+ent_No <- Inj_int_ent_30sec_3min %>% filter(Inj_Lesion == "anti-DBH-SAP_No")
+ent_No$time_bin_30sec <- factor(ent_No$time_bin_30sec, ordered = TRUE)
+
+#IgG
+ent_igg_model <- glmmTMB(shannon_entropy ~ Condition * time_bin_30sec + (1|BirdID), 
+                         family = gaussian(link=identity), data =ent_IgG)
+
+Anova(ent_igg_model)
+pairs(emmeans(ent_igg_model, ~Condition | time_bin_3min, adjust = "fdr"))
+
+
+#DBH no 
+ent_no_model <- glmmTMB(shannon_entropy ~ Condition * time_bin_30sec + (1|BirdID), 
+                        family = gaussian(link=identity), data =ent_No)
+
+Anova(ent_no_model)
+pairs(emmeans(ent_no_model, ~Condition | time_bin_30sec, adjust = "fdr"))
+
+#DBH yes
+ent_yes_model <- glmmTMB(shannon_entropy ~ Condition * time_bin_3min + (1|BirdID), 
+                         family = gaussian(link=identity), data =ent_Yes)
+
+Anova(ent_yes_model)
+pairs(emmeans(ent_igg_model, ~Condition | time_bin_3min, adjust = "fdr"))
+
+
+
+
+# Speed 30 sec bins  ------------------------------------------------------
+
+
+
 #Average speed 30 sec bins 
 Inj_binned_speed_30sec <- Inj_Birds_all_30sec %>%
   group_by(BirdID, Condition, time_bin_30sec, Inj_Lesion) %>%
@@ -320,6 +727,116 @@ Inj_binned_speed_30sec <- Inj_Birds_all_30sec %>%
     mean_speed = mean(speed_head_psec),
     .groups = "drop"
   )
+
+Inj_binned_speed_30sec_3min <- Inj_binned_speed_30sec %>% filter(time_bin_30sec<7 & Inj_Lesion !="anti-DBH-SAP_Yes")
+Inj_binned_speed_30sec_3min$time_bin_30sec <- factor(Inj_binned_speed_30sec_3min$time_bin_30sec, ordered=TRUE)
+
+hist(Inj_binned_speed_30sec_3min$mean_speed)
+hist(sqrt(Inj_binned_speed_30sec_3min$mean_speed))
+hist((Inj_binned_speed_30sec_3min$mean_speed)^(1/3))
+hist(log(Inj_binned_speed_30sec_3min$mean_speed))
+
+
+library(bestNormalize)
+
+bn <- boxcox(Inj_binned_speed$median_head_speed)
+
+bn$lambda
+Inj_binned_speed$speed_bc <- predict(bn)
+
+hist(Inj_binned_speed$speed_bc)
+
+Inj_speed_model <- glmmTMB(mean_speed ~Condition * time_bin_30sec * Inj_Lesion + (1|BirdID),
+                           family = tweedie(link = "log"), data = Inj_binned_speed_30sec_3min, 
+                           control = glmmTMBControl(optimizer = optim, optArgs = list(method = "BFGS")))
+
+
+Anova(Inj_speed_model)
+
+summary(Inj_speed_model)
+
+#residuals
+simulationOutput <- simulateResiduals(fittedModel = Inj_speed_model, plot = TRUE)
+
+plot(residuals(Inj_speed_model))
+qqnorm(resid(Inj_speed_model))
+qqline(resid(Inj_speed_model))
+
+
+# Raw points and model predictions plot ######### 
+emm_speed_inj <- emmeans(
+  Inj_speed_model,
+  ~ Condition * time_bin_3min | Inj_Lesion
+)
+
+#TO plot raw values in back
+emm_df_speed_inj <- as.data.frame(emm_speed_inj) %>%
+  mutate(
+    area_hat = exp(emmean),
+    lower.CL = exp(lower.CL),
+    upper.CL = exp(upper.CL)
+  )
+
+#to plot log values in back 
+emm_df_speed_inj <- as.data.frame(emm_speed_inj) %>%
+  mutate(
+    area_hat = emmean,
+    lower.CL = lower.CL,
+    upper.CL = upper.CL
+  )
+
+ggplot(Inj_binned_speed,
+       aes(x = time_bin_3min, y = log(mean_speed), color = Condition)) +
+  
+  # Raw data
+  geom_jitter(
+    aes(group = BirdID),
+    width = 0.15,
+    alpha = 0.3,
+    size = 1
+  ) +
+  
+  geom_line(
+    aes(group = BirdID),
+    alpha = 0.15,
+    linewidth = 0.4
+  ) +
+  
+  # Model-predicted means (correct scale)
+  geom_line(
+    data = emm_df_speed_inj,
+    aes(y = area_hat, group = Condition),
+    linewidth = 1.2
+  ) +
+  
+  # 95% CI ribbon
+  geom_ribbon(
+    data = emm_df_speed_inj,
+    aes(
+      y = area_hat,
+      ymin = lower.CL,
+      ymax = upper.CL,
+      fill = Condition,
+      group = Condition
+    ),
+    alpha = 0.25,
+    color = NA
+  ) +
+  
+  facet_wrap(~Inj_Lesion, nrow = 1)+
+  scale_color_manual(values = c("F"="purple", "N"="orange")) +
+  scale_fill_manual(values = c("F"="purple", "N"="orange")) +
+  labs(x = "Time bin (3 min)", y = "log(mean speed)") +
+  theme_classic()
+
+
+
+
+
+
+# PCA 30 sec  -------------------------------------------------------------
+
+
 
 #Combine metric dataframes 
 Inj_int_ent_30sec$ID <- paste(Inj_int_ent_30sec$BirdID, Inj_int_ent_30sec$Condition, Inj_int_ent_30sec$time_bin_30sec, sep = "_")
