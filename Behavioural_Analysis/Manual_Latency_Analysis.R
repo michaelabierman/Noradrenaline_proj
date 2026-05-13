@@ -18,8 +18,8 @@ library(tidyverse)
 library(viridis)
 
 #Load in csv of latency data
-UM_90 <- read.csv("All_manual_lat_beh.csv") 
-UM_90 <- UM_90 %>% filter (Playbacks == 90) # ensure only those with 90 trials 
+UM_manual <- read.csv("/Users/michaelabierman/Downloads/LAB/Daria/Results/data/manual/All_manual_lat_beh.csv")
+UM_90 <- UM_manual %>% filter (Playbacks == 90) # ensure only those with 90 trials 
 UM_90 <- UM_90 %>% select(-X.1, -X)
 
 # Subset to movements and vocalizations 

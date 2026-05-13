@@ -11,7 +11,7 @@ Circ_example_birds <- U_Birds_90 %>% filter(BirdID == Familiar_ex | BirdID == No
 Circ_example_birds_bin1 <- Circ_example_birds %>% filter(time_bin_3min ==1)
 
 
-# CV example Fig2c --------------------------------------------------------
+# CV example Fig4C --------------------------------------------------------
 
 # Compute density of head angles within each time_bin and condition
 angle_density <- Circ_example_birds %>%
@@ -311,7 +311,7 @@ grid.arrange(N_circ_var_O, F_Circ_var_P,ncol=1 )
 
 
 # speed example figs -------------------------------------------------------
-#Fig 2b 
+#Fig 4b 
 ## Full exp ex 
 ggplot(Circ_example_birds, aes(x=adj_frame, y=speed_head_psec, group=Condition, color =Condition))+
   geom_line(linewidth = 0.6, alpha=0.8)+
@@ -355,7 +355,7 @@ ggplot(Circ_example_birds_bin1, aes(x=adj_frame, y=speed_head_psec, color = Cond
 
 
 
-# Entropy and area fig (fig2d)  -----------------------------------------------
+# Entropy and area (fig4D)  -----------------------------------------------
 
 Circ_example_birds_bin1$Condition <- factor(Circ_example_birds_bin1$Condition, 
                                             levels = c("N", "F"))

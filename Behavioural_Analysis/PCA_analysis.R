@@ -43,7 +43,7 @@ scree_df <- data.frame(
   variance = pve
 )
 
-#Scree plot (Fig 6a)
+#Scree plot 
 ggplot(scree_df, aes(x = PC, y = variance)) +
   geom_line(color = "steelblue", linewidth = 0.8) +
   geom_bar(
@@ -73,7 +73,7 @@ ggplot(scree_df, aes(x = PC, y = variance)) +
     axis.line = element_line(colour = "black")
   )
 
-#Vector bi-plot (fig 6b)
+#Vector bi-plot 
 autoplot(pca_res_inj_simp, data = all_metrics_cnt_no,
          loadings = TRUE, loadings.label = TRUE, loadings.label.size = 4) +
   theme_minimal() +
@@ -594,7 +594,7 @@ compute_spatial_entropy_time_inj <- function(data, grid_width, grid_height, grid
   return(results)
 }
 
-Inj_int_ent_30sec <- compute_spatial_entropy_time_inj(Inj_Birds_all_30sec, grid_width = 40, grid_height = 21, grid_size = grid_size)
+Inj_int_ent_30sec <- compute_spatial_entropy_time_inj(Inj_Birds_all_30sec, grid_width = 40, grid_height = 21, grid_size = 42)
 
 # Inj Birds Entropy stats -------------------------------------------------
 
@@ -717,8 +717,6 @@ pairs(emmeans(ent_igg_model, ~Condition | time_bin_3min, adjust = "fdr"))
 
 # Speed 30 sec bins  ------------------------------------------------------
 
-
-
 #Average speed 30 sec bins 
 Inj_binned_speed_30sec <- Inj_Birds_all_30sec %>%
   group_by(BirdID, Condition, time_bin_30sec, Inj_Lesion) %>%
@@ -737,17 +735,8 @@ hist((Inj_binned_speed_30sec_3min$mean_speed)^(1/3))
 hist(log(Inj_binned_speed_30sec_3min$mean_speed))
 
 
-library(bestNormalize)
-
-bn <- boxcox(Inj_binned_speed$median_head_speed)
-
-bn$lambda
-Inj_binned_speed$speed_bc <- predict(bn)
-
-hist(Inj_binned_speed$speed_bc)
-
-Inj_speed_model <- glmmTMB(mean_speed ~Condition * time_bin_30sec * Inj_Lesion + (1|BirdID),
-                           family = tweedie(link = "log"), data = Inj_binned_speed_30sec_3min, 
+Inj_speed_model <- glmmTMB(log(mean_speed) ~Condition * time_bin_30sec * Inj_Lesion + (1|BirdID),
+                           family = gaussian(link = "identity"), data = Inj_binned_speed_30sec_3min, 
                            control = glmmTMBControl(optimizer = optim, optArgs = list(method = "BFGS")))
 
 
@@ -766,18 +755,10 @@ qqline(resid(Inj_speed_model))
 # Raw points and model predictions plot ######### 
 emm_speed_inj <- emmeans(
   Inj_speed_model,
-  ~ Condition * time_bin_3min | Inj_Lesion
+  ~ Condition * time_bin_30sec | Inj_Lesion
 )
 
-#TO plot raw values in back
-emm_df_speed_inj <- as.data.frame(emm_speed_inj) %>%
-  mutate(
-    area_hat = exp(emmean),
-    lower.CL = exp(lower.CL),
-    upper.CL = exp(upper.CL)
-  )
-
-#to plot log values in back 
+#TO plot model (log) values in back
 emm_df_speed_inj <- as.data.frame(emm_speed_inj) %>%
   mutate(
     area_hat = emmean,
@@ -785,8 +766,8 @@ emm_df_speed_inj <- as.data.frame(emm_speed_inj) %>%
     upper.CL = upper.CL
   )
 
-ggplot(Inj_binned_speed,
-       aes(x = time_bin_3min, y = log(mean_speed), color = Condition)) +
+ggplot(Inj_binned_speed_30sec_3min,
+       aes(x = time_bin_30sec, y = log(mean_speed), color = Condition)) +
   
   # Raw data
   geom_jitter(
@@ -835,8 +816,6 @@ ggplot(Inj_binned_speed,
 
 
 # PCA 30 sec  -------------------------------------------------------------
-
-
 
 #Combine metric dataframes 
 Inj_int_ent_30sec$ID <- paste(Inj_int_ent_30sec$BirdID, Inj_int_ent_30sec$Condition, Inj_int_ent_30sec$time_bin_30sec, sep = "_")
@@ -942,16 +921,19 @@ autoplot(pca_res_30sec_simp, data = all_metrics_30sec_simp,
 
 
 # First 3 min PCA stats ---------------------------------------------------
+hist(pca_scores_30sec_simp$PC1)
+
 pca_scores_30sec_simp$time_bin_30sec <- factor(pca_scores_30sec_simp$time_bin_30sec, ordered = TRUE)
 Inj_PC1_model_bin1_30_simp <- glmmTMB(PC1 ~ Condition * Inj_Lesion * time_bin_30sec + (1|BirdID),      
                                       family = gaussian(link = "identity"), data = pca_scores_30sec_simp)
+
 
 Anova(Inj_PC1_model_bin1_30_simp)
 
 summary(Inj_PC1_model_bin1_30_simp)
 
 #residuals
-simulationOutput <- simulateResiduals(fittedModel = Inj_PC1_model_bin1_30, plot = TRUE)
+simulationOutput <- simulateResiduals(fittedModel = Inj_PC1_model_bin1_30_simp, plot = TRUE)
 
 
 ### Raw points and model predictions plot ######### 
@@ -974,6 +956,7 @@ pca_scores_30sec_simp <- pca_scores_30sec_simp %>%
 emm_df_PCA_inj_30_simp <- emm_df_PCA_inj_30_simp %>%
   mutate(Inj_Lesion = factor(Inj_Lesion, levels = c("IgG-SAP_No", "anti-DBH-SAP_No")))
 
+#Figure 4E
 ggplot(pca_scores_30sec_simp,
        aes(x = time_bin_30sec, y = PC1, color = Condition)) +
   
@@ -982,7 +965,7 @@ ggplot(pca_scores_30sec_simp,
     aes(group = BirdID),
     width = 0.15,
     alpha = 0.3,
-    size = 1
+    size = 1.2
   ) +
   
   geom_line(
@@ -1013,32 +996,32 @@ ggplot(pca_scores_30sec_simp,
   ) +
   
   facet_wrap(~Inj_Lesion, nrow = 1, labeller = labeller(Inj_Lesion = c("IgG-SAP_No" = "IgG", 
-                                                                       "anti-DBH-SAP_No" = "DBH")))+
+                                                                       "anti-DBH-SAP_No" = "DBH"))) +
   scale_color_manual(values = c("F"="purple", "N"="orange")) +
   scale_fill_manual(values = c("F"="purple", "N"="orange")) +
-  labs(x = "Time bin (30 sec)", y = "Movement Intensity (PC1)") +
-  theme_minimal()+
-  #scale_x_discrete(
-  # labels = function(x) {
-  #  x <- as.numeric(x)
-  # paste0(((x - 1) * 30), "-", x * 30)
-  #  }
-  #)+
+  labs(x = "Time bin (min)", y = "Movement Intensity (PC1)") +
+  theme_minimal() +
+  scale_x_discrete(
+    labels = function(x) {
+      x <- as.numeric(x)
+      paste0(((x - 1) * 0.5), "-", x * 0.5)  # Convert to minutes (30s = 0.5 min)
+    }
+  ) +
   theme(
     legend.position = "none",
     legend.title = element_text(size = 11, face = "bold"),
     legend.text = element_text(size = 10, face = "bold"),
     axis.title = element_text(size = 14, face = "bold"),
-    axis.text = element_text(size = 10),
+    axis.text = element_text(size = 12),
+    axis.text.x = element_text(angle = 45, hjust = 1, face ="bold"),  # Rotate x-axis labels
+    axis.text.y = element_text(face ="bold"),  # Rotate x-axis labels
     strip.background = element_blank(),
     strip.text = element_text(face = "bold", size = 11),
     panel.grid.major = element_blank(),
     panel.grid.minor = element_blank(),
-    axis.line = element_line(colour = "black")
+    axis.line = element_line(colour = "black"),
+    axis.ticks = element_line(colour = "black")
   )
-
-
-
 
 ##Just IgG
 pca_igg_bin1_30_simp <- pca_scores_30sec_simp %>% filter(Inj_Lesion == "IgG-SAP_No")

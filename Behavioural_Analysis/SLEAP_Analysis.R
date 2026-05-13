@@ -162,7 +162,7 @@ all_birds_nframes <- bind_rows(summary_Inj, summary_UM90)
 
 all_birds_nframes$detection_type <- factor(all_birds_nframes$detection_type, 
                                            levels = c("beak_only","head_only","neither","both_seen"))
-#Supp Fig 1b 
+#Supp Fig 2b 
 ggplot(
   all_birds_nframes, 
   aes(
@@ -171,7 +171,7 @@ ggplot(
     fill = detection_type
   )
 ) +
-  geom_boxplot(
+  geom_violin(
     position = position_dodge(width = 0.8),
     outlier.shape = NA,
     alpha = 0.5
@@ -182,7 +182,7 @@ ggplot(
       jitter.width = 0.15,
       dodge.width = 0.8
     ),
-    size = 1.8,
+    size = 1,
     alpha = 0.7
   ) +
   labs(
