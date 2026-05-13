@@ -1,2 +1,2 @@
 # Noradrenaline_proj
-Scripts and models for noradrenaline project
+Code and statistical models associated with manuscript titled "Noradrenergic inputs into the auditory forebrain modulate auditory memory formation" 
