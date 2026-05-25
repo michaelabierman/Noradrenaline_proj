@@ -256,10 +256,13 @@ ggplot(all_beak_head_combined, aes(x=detection_type, y=percent, fill=detection_t
     axis.text = element_text(size = 10),
     strip.background = element_blank(),
     strip.text = element_text(size = 11),
+    axis.ticks.y = element_line(colour = "black"),
+    axis.ticks.length = unit(0.2, "cm"),
     panel.grid.major = element_blank(),
     panel.grid.minor = element_blank(),
     axis.line = element_line(colour = "black")
   ) +
+  scale_y_continuous(limits = c(0, 100))+
   scale_fill_manual(values = c(
     "beak_combined" = "steelblue",
     "head_combined" = "chartreuse4"
