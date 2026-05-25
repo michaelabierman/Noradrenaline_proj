@@ -160,9 +160,11 @@ summary_Inj <- Inj_long %>%
 
 all_birds_nframes <- bind_rows(summary_Inj, summary_UM90)
 
+all_birds_nframes$Injection[is.na(all_birds_nframes$Injection)] <- "UM"
+all_birds_nframes$ID <- paste(all_birds_nframes$Injection, all_birds_nframes$BirdID, sep = "_")  
+
 all_birds_nframes$detection_type <- factor(all_birds_nframes$detection_type, 
                                            levels = c("beak_only","head_only","neither","both_seen"))
-#Supp Fig 2b 
 ggplot(
   all_birds_nframes, 
   aes(
@@ -207,6 +209,66 @@ ggplot(
   )+
   scale_color_manual(values = c("beak_only"="steelblue", "head_only"="chartreuse4", "both_seen"="indianred", "neither"="deeppink"))+
   scale_fill_manual(values = c("beak_only"="steelblue", "head_only"="chartreuse4", "both_seen"="indianred", "neither"="deeppink"))
+
+
+all_birds_combined <- all_birds_nframes %>%
+  select(ID, detection_type, percent) %>%  # keep only the columns you need
+  pivot_wider(names_from = detection_type, values_from = percent) %>%
+  mutate(
+    beak_combined = beak_only + both_seen,
+    head_combined = head_only + both_seen
+  )
+
+all_beak_head_combined <- all_birds_combined %>%
+  select(ID, beak_combined, head_combined) %>%
+  pivot_longer(
+    cols = c(beak_combined, head_combined),
+               names_to = "detection_type",
+               values_to = "percent"
+  )
+
+#Supp Fig 2b 
+ggplot(all_beak_head_combined, aes(x=detection_type, y=percent, fill=detection_type))+
+  geom_violin(
+    position = position_dodge(width = 0.8),
+    outlier.shape = NA,
+    alpha = 0.5
+  ) +
+  geom_point(
+    aes(color = detection_type),
+    position = position_jitter(width = 0.15),
+    size = 1,
+    alpha = 0.7
+  ) +
+  labs(
+    x = "Detection type",
+    y = "Percentage of frames",
+    fill = "Detection type",
+    color = "Detection type",
+    title = ""
+  ) +
+  theme_minimal(base_size = 13) +
+  theme(
+    legend.position = "right",
+    legend.title = element_text(size = 11),
+    legend.text = element_text(size = 10),
+    axis.title = element_text(size = 14),
+    axis.text = element_text(size = 10),
+    strip.background = element_blank(),
+    strip.text = element_text(size = 11),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    axis.line = element_line(colour = "black")
+  ) +
+  scale_fill_manual(values = c(
+    "beak_combined" = "steelblue",
+    "head_combined" = "chartreuse4"
+  )) +
+  scale_color_manual(values = c(
+    "beak_combined" = "steelblue",
+    "head_combined" = "chartreuse4"
+  ))
+
 
 
 ##Viz scale check
