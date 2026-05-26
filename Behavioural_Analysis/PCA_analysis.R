@@ -961,13 +961,17 @@ ggplot(pca_scores_30sec_simp,
        aes(x = time_bin_30sec, y = PC1, color = Condition)) +
   
   # Raw data
-  geom_jitter(
-    aes(group = BirdID),
-    width = 0.15,
-    alpha = 0.3,
-    size = 1.2
+  # geom_jitter(
+  #   aes(group = BirdID),
+  #   width = 0.15,
+  #   alpha = 0.3,
+  #   size = 1.2
+  # ) +
+  geom_point(aes(group = BirdID),
+             width = 0.15,
+             alpha = 0.3,
+             size = 1.2
   ) +
-  
   geom_line(
     aes(group = BirdID),
     alpha = 0.15,
@@ -995,8 +999,8 @@ ggplot(pca_scores_30sec_simp,
     color = NA
   ) +
   
-  facet_wrap(~Inj_Lesion, nrow = 1, labeller = labeller(Inj_Lesion = c("IgG-SAP_No" = "IgG", 
-                                                                       "anti-DBH-SAP_No" = "DBH"))) +
+  facet_wrap(~Inj_Lesion, nrow = 1, labeller = labeller(Inj_Lesion = c("IgG-SAP_No" = "CON", 
+                                                                       "anti-DBH-SAP_No" = "DBH-SAP"))) +
   scale_color_manual(values = c("F"="purple", "N"="orange")) +
   scale_fill_manual(values = c("F"="purple", "N"="orange")) +
   labs(x = "Time bin (min)", y = "Movement Intensity (PC1)") +
