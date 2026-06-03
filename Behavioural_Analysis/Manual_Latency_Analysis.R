@@ -22,6 +22,28 @@ UM_manual <- read.csv("/Users/michaelabierman/Downloads/LAB/Daria/Results/data/m
 UM_90 <- UM_manual %>% filter (Playbacks == 90) # ensure only those with 90 trials 
 UM_90 <- UM_90 %>% select(-X.1, -X)
 
+#Median latencies 
+ggplot(UM_90, aes(x=Condition, y=Latencies, fill=Condition, color=Condition))+
+  #geom_violin()+
+  geom_boxplot()+
+  geom_point(alpha=0.8)+
+  theme_minimal()+
+  theme(
+    legend.position = "right",
+    legend.title = element_text(size = 11, face = "bold"),
+    legend.text = element_text(size = 10, face = "bold"),
+    axis.title = element_text(size = 14, face = "bold"),
+    axis.text = element_text(size = 10, face = "bold"),
+    strip.background = element_blank(),
+    strip.text = element_text(face = "bold", size = 11),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    axis.line = element_line(colour = "black")
+  )+
+  labs(x="Stimuli")+
+  scale_fill_manual(values = c("N" = "orange", "F" = "purple")) +
+  scale_color_manual(values = c("N" = "orange3", "F" = "purple3"))
+
 # Subset to movements and vocalizations 
 UM_manual_move <- UM_90 %>% filter(Behaviour == "Long Hop" | Behaviour =="Short Hop" | Behaviour =="Beak Swipe")
 
