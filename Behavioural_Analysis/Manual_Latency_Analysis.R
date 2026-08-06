@@ -59,8 +59,10 @@ UM_90_Uncapped_model_move <- glmmTMB(
 )
 
 Anova(UM_90_Uncapped_model_move)
-
+summary(UM_90_Uncapped_model_move)
 pairs(emmeans(UM_90_Uncapped_model_move, ~ Condition|Behaviour), adjust = "fdr")
+emm_move <- emmeans(UM_90_Uncapped_model_move, ~ Condition | Behaviour, type = "response")
+confint(pairs(emm_move, adjust = "fdr", type = "response"))
 
 #residuals
 simulationOutput <- simulateResiduals(fittedModel = UM_90_Uncapped_model_move, plot = TRUE)
@@ -79,7 +81,8 @@ UM_90_Uncapped_model_vocal <- glmmTMB(
 
 Anova(UM_90_Uncapped_model_vocal)
 pairs(emmeans(UM_90_Uncapped_model_vocal, ~ Condition|Behaviour), adjust = "holm")
-
+emm_vocal <- emmeans(UM_90_Uncapped_model_vocal, ~ Condition | Behaviour, type = "response")
+confint(pairs(emm_vocal, adjust = "fdr", type = "response"))
 
 #residuals
 simulationOutput <- simulateResiduals(fittedModel = UM_90_Uncapped_model_vocal, plot = TRUE)

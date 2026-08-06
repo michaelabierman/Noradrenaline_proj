@@ -47,6 +47,7 @@ Inj_lat_move_model <- glmmTMB(
 Anova(Inj_lat_move_model)
 summary(Inj_lat_move_model)
 
+
 #residuals
 simulationOutput <- simulateResiduals(fittedModel = Inj_lat_move_model, plot = TRUE)
 plot(residuals(Inj_lat_move_model))
@@ -62,6 +63,8 @@ emm_beh <- emmeans(
   type = "response"   # back-transforms from log scale
 )
 pairs(emm_beh)
+emm_move_igg <- emmeans(Inj_lat_move_model, ~ Condition | Behaviour, type = "response")
+confint(pairs(emm_move_igg, adjust = "fdr", type = "response"))
 
 
 # Post hoc models (for model including lesion birds)
@@ -169,8 +172,8 @@ Inj_lat_move_vocal_igg <- glmmTMB(
 )
 
 Anova(Inj_lat_move_vocal_igg)
-
 summary(Inj_lat_move_vocal_igg)
+
 
 #residuals
 simulationOutput <- simulateResiduals(fittedModel = Inj_lat_move_vocal_igg, plot = TRUE)
@@ -178,6 +181,11 @@ plot(residuals(Inj_lat_move_vocal_igg))
 qqnorm(resid(Inj_lat_move_vocal_igg))
 qqline(resid(Inj_lat_move_vocal_igg))
 pairs(emmeans(Inj_lat_move_vocal_igg, ~ Condition | Behaviour, adjust = "fdr"))
+emm_vocal_igg <- emmeans(Inj_lat_move_vocal_igg, ~ Condition | Behaviour, type = "response")
+confint(pairs(emm_vocal_igg, adjust = "fdr", type = "response"))
+
+
+
 
 # DBH NO #
 Inj_lat_vocal_no <- Inj_lat_vocal %>% filter(Inj_Lesion == "anti-DBH-SAP_No")
@@ -197,6 +205,11 @@ plot(residuals(Inj_lat_vocal_model_no))
 qqnorm(resid(Inj_lat_vocal_model_no))
 qqline(resid(Inj_lat_vocal_model_no))
 pairs(emmeans(Inj_lat_vocal_model_no, ~ Condition | Behaviour, adjust = "fdr"))
+emm_vocal_dbhno <- emmeans(Inj_lat_vocal_model_no, ~ Condition | Behaviour, type = "response")
+confint(pairs(emm_vocal_dbhno, adjust = "fdr", type = "response"))
+
+
+
 
 # DBH YES #
 Inj_lat_vocal_yes <- Inj_lat_vocal %>% filter(Inj_Lesion == "anti-DBH-SAP_Yes")
@@ -216,6 +229,258 @@ plot(residuals(Inj_lat_vocal_model_yes))
 qqnorm(resid(Inj_lat_vocal_model_yes))
 qqline(resid(Inj_lat_vocal_model_yes))
 pairs(emmeans(Inj_lat_vocal_model_yes, ~ Condition | Behaviour, adjust = "fdr"))
+
+
+
+
+
+
+# lats capped at 3 mins ---------------------------------------------------
+dodge <- position_dodge(width = 0.6)
+
+Inj_lat_move_3min <- Inj_lat_move %>% filter(Inj_Lesion != "anti-DBH-SAP_Yes") %>%
+  mutate(Latencies = pmin(Latencies, 18))
+
+
+Inj_lat_vocal_3min <- Inj_lat_vocal %>% filter(Inj_Lesion != "anti-DBH-SAP_Yes") %>%
+  mutate(Latencies = pmin(Latencies, 18))
+
+
+#Plot move 
+ggplot(Inj_lat_move_3min, aes(x = Inj_Lesion, y = Latencies, fill = Condition, color = Condition)) +
+  
+  # Mean bars
+  stat_summary(
+    fun = mean,
+    geom = "bar",
+    position = dodge,
+    alpha = 0.7,
+    width = 0.5
+  ) +
+  
+  # Error bars
+  stat_summary(
+    aes(group = Condition),
+    fun.data = mean_se,
+    geom = "errorbar",
+    position = dodge,
+    width = 0.2
+  ) +
+  
+  # Raw data
+  geom_jitter(
+    size = 2,
+    position = position_jitterdodge(
+      jitter.width = 0.3,
+      dodge.width = 0.6
+    ),
+    show.legend = FALSE
+  ) +
+  scale_y_continuous(
+    limits = c(0, 20),
+    breaks = seq(0, 20, by = 5)
+  )+
+  theme_minimal() +
+  theme(
+    text = element_text(size = 14, face = "bold", color = "black"),
+    axis.text.x = element_text(size = 10, color = "black"),
+    legend.position = "none",
+    panel.spacing = unit(1.5, "lines"),
+    panel.grid = element_blank(),
+  ) +
+  
+  labs(
+    x = NULL,
+    y = "Latencies (Trial #)",
+    fill = "Condition"
+  ) +
+  facet_wrap(~Behaviour) +
+  scale_x_discrete(
+    labels = c(
+      "IgG-SAP_No" = "IgG",
+      "anti-DBH-SAP_No" = "DBH",
+      "anti-DBH-SAP_Yes" = "DBH-Yes"
+    )
+  )+
+  theme(
+    legend.position = "none",
+    legend.title = element_text(size = 11, face = "bold"),
+    legend.text = element_text(size = 10, face = "bold"),
+    axis.title = element_text(size = 14, face = "bold"),
+    axis.text = element_text(size = 10, face = "bold"),
+    strip.background = element_blank(),
+    strip.text = element_text(face = "bold", size = 11),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    axis.line = element_line(colour = "black")
+  )+
+  scale_fill_manual(values = c("N" = "orange", "F" = "purple")) +
+  scale_color_manual(values = c("N" = "orange3", "F" = "purple"))
+
+
+#Stats move 
+Inj_lat_move_model_3min <- glmmTMB(
+  Latencies ~ Condition * Inj_Lesion * Behaviour + (1|BirdID),
+  family = truncated_nbinom2(link = "log"),  
+  data = Inj_lat_move_3min
+)
+
+
+Anova(Inj_lat_move_model_3min)
+
+summary(Inj_lat_move_model_3min)
+
+
+emm_beh_3 <- emmeans(
+  Inj_lat_move_model_3min,
+  ~ Condition | Behaviour,
+  type = "response"   # back-transforms from log scale
+)
+
+pairs(emm_beh_3)
+confint(pairs(emm_beh_3, adjust = "fdr", type = "response"))
+
+
+
+
+# Vocal 3 mins ------------------------------------------------------------
+#Plot vocal
+ggplot(Inj_lat_vocal_3min, aes(x = Inj_Lesion, y = Latencies, fill = Condition, color = Condition)) +
+  
+  # Mean bars
+  stat_summary(
+    fun = mean,
+    geom = "bar",
+    position = dodge,
+    alpha = 0.7,
+    width = 0.5
+  ) +
+  
+  # Error bars
+  stat_summary(
+    aes(group = Condition),
+    fun.data = mean_se,
+    geom = "errorbar",
+    position = dodge,
+    width = 0.2
+  ) +
+  
+  # Raw data
+  geom_jitter(
+    size = 2,
+    position = position_jitterdodge(
+      jitter.width = 0.3,
+      dodge.width = 0.6
+    ),
+    show.legend = FALSE
+  ) +
+  scale_y_continuous(
+    limits = c(0, 20),
+    breaks = seq(0, 20, by = 5)
+  )+
+  theme_minimal() +
+  theme(
+    text = element_text(size = 14, face = "bold", color = "black"),
+    axis.text.x = element_text(size = 10, color = "black"),
+    legend.position = "none",
+    panel.spacing = unit(1.5, "lines"),
+    panel.grid = element_blank(),
+  ) +
+  
+  labs(
+    x = NULL,
+    y = "Latencies (Trial #)",
+    fill = "Condition"
+  ) +
+  facet_wrap(~Behaviour) +
+  scale_x_discrete(
+    labels = c(
+      "IgG-SAP_No" = "IgG",
+      "anti-DBH-SAP_No" = "DBH",
+      "anti-DBH-SAP_Yes" = "DBH-Yes"
+    )
+  )+
+  theme(
+    legend.position = "none",
+    legend.title = element_text(size = 11, face = "bold"),
+    legend.text = element_text(size = 10, face = "bold"),
+    axis.title = element_text(size = 14, face = "bold"),
+    axis.text = element_text(size = 10, face = "bold"),
+    strip.background = element_blank(),
+    strip.text = element_text(face = "bold", size = 11),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    axis.line = element_line(colour = "black")
+  )+
+  scale_fill_manual(values = c("N" = "orange", "F" = "purple")) +
+  scale_color_manual(values = c("N" = "orange3", "F" = "purple"))
+
+
+#Stats vocal 
+Inj_lat_vocal_model_3min <- glmmTMB(
+  Latencies ~ Condition * Inj_Lesion * Behaviour + (1|BirdID),
+  family = truncated_nbinom2(link = "log"),  
+  data = Inj_lat_vocal_3min
+)
+
+
+Anova(Inj_lat_vocal_model_3min)
+
+summary(Inj_lat_vocal_model_3min)
+
+## Post hoc move 3 mins 
+##### IgG ##########
+Inj_lat_vocal_igg_3min <- Inj_lat_vocal_3min %>% filter(Inj_Lesion == "IgG-SAP_No")
+
+Inj_lat_vocal_igg_3min_model <- glmmTMB(
+  Latencies ~ Condition * Behaviour + (1|BirdID),
+  family = truncated_nbinom2(link = "log"),  
+  data = Inj_lat_vocal_igg_3min
+)
+
+Anova(Inj_lat_vocal_igg_3min_model)
+
+summary(Inj_lat_vocal_igg_3min_model)
+
+#residuals
+simulationOutput <- simulateResiduals(fittedModel = Inj_lat_vocal_igg_3min_model, plot = TRUE)
+
+plot(residuals(Inj_lat_vocal_igg_3min_model))
+qqnorm(resid(Inj_lat_vocal_igg_3min_model))
+qqline(resid(Inj_lat_vocal_igg_3min_model))
+pairs(emmeans(Inj_lat_vocal_igg_3min_model, ~ Condition | Behaviour, adjust = "fdr"))
+emm_vocal_igg_3min <- emmeans(Inj_lat_vocal_igg_3min_model, ~ Condition | Behaviour, type = "response")
+confint(pairs(emm_vocal_igg_3min, adjust = "fdr", type = "response"))
+
+
+
+######### DBH NO #############
+Inj_lat_vocal_no_3min <- Inj_lat_vocal_3min %>% filter(Inj_Lesion == "anti-DBH-SAP_No")
+hist(Inj_lat_vocal_no_3min$Latencies)
+
+#False covergence
+Inj_lat_vocal_model_no_3min <- glmmTMB(
+  Latencies ~ Condition * Behaviour + (1|BirdID),
+  family = truncated_nbinom2(link = "log"),  
+  data = Inj_lat_vocal_no_3min
+)
+
+#Converges with identical values to truncated_nbinom2
+Inj_lat_vocal_model_no_3min <- glmmTMB(
+  Latencies ~ Condition * Behaviour + (1|BirdID),
+  family = poisson(link = "log"),  
+  data = Inj_lat_vocal_no_3min
+)
+Anova(Inj_lat_vocal_model_no_3min)
+
+summary(Inj_lat_vocal_model_no_3min)
+
+#residuals
+simulationOutput <- simulateResiduals(fittedModel = Inj_lat_vocal_model_no_3min, plot = TRUE)
+
+
+
+
 
 
 

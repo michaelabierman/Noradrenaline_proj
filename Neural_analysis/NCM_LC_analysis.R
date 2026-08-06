@@ -21,7 +21,7 @@ birds_to_exclude <- c("bl40pi140", "bl116pi160","bl85gy195",
 
 #  NCM ---------------------------------------------------------------------####
 #Import NCM batch1-6 file and remove birds with Lesion
-df_NCM<- read_excel("DBH_NCM_batch123456.xlsx")%>%
+df_NCM<- read_excel("~/Downloads/LAB/Daria/Results/DBH_NCM_batch123456.xlsx")%>%
   filter(!BirdID %in% birds_to_exclude)
 df_NCM$Injection <- dplyr::recode(
   df_NCM$Injection,
@@ -134,7 +134,7 @@ simulationOutput <- simulateResiduals(fittedModel = glmtmb_NCM, plot = TRUE)
 # LC------------------------------------------------------------------------####
 
 #import LC batch1-6 file
-df_LC <- read_excel("DBH_LC_batch123456.xlsx")%>%
+df_LC <- read_excel("~/Downloads/LAB/Daria/Results/DBH_LC_batch123456.xlsx")%>%
   filter(!BirdID %in% birds_to_exclude)
 #change control label to IgG-SAP
 df_LC$Injection <- dplyr::recode(

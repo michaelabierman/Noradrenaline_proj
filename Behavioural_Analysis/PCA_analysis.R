@@ -1040,6 +1040,9 @@ Anova(IgG_PC1_model_bin1_30_simp)
 summary(IgG_PC1_model_bin1_30_simp)
 
 pairs(emmeans(IgG_PC1_model_bin1_30_simp, ~ Condition | time_bin_30sec), adjust = "fdr")
+emm_pca_3min_igg <- emmeans(IgG_PC1_model_bin1_30_simp, ~ Condition | time_bin_30sec, type = "response")
+confint(pairs(emm_pca_3min_igg, adjust = "fdr", type = "response"))
+
 
 #residuals
 simulationOutput <- simulateResiduals(fittedModel = IgG_PC1_model_bin1_30, plot = TRUE)
@@ -1059,6 +1062,9 @@ Anova(No_PC1_model_bin1_30_simp)
 summary(No_PC1_model_bin1_30_simp)
 
 pairs(emmeans(No_PC1_model_bin1_30_simp, ~ Condition | time_bin_30sec), adjust = "fdr")
+emm_pca_3min_dbh_no <- emmeans(No_PC1_model_bin1_30_simp, ~ Condition | time_bin_30sec, type = "response")
+confint(pairs(emm_pca_3min_dbh_no, adjust = "fdr", type = "response"))
+
 
 #residuals
 simulationOutput <- simulateResiduals(fittedModel = No_PC1_model_bin1_30_simp, plot = TRUE)
