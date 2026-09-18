@@ -662,6 +662,425 @@ ggplot(Inj_lat_vocal%>%filter(Inj_Lesion!="anti-DBH-SAP_Yes"), aes(x = Inj_Lesio
   scale_color_manual(values = c("N" = "orange3", "F" = "purple"))
 
 
+# Day 1 Analysis Figure 5 -------------------------------------------------
+day_1 <- read.csv("/Users/michaelabierman/Downloads/LAB/Daria/Results/data/manual/Saporin_batches/familiar_vs_unfamiliar_experimental_day1_v3.csv")
+
+exclude_birds <- c("bl85gy195", "bl21or11", "bl48pu128", "bl191or41", "bl10or50", "bl25or15")
+day_1 <- day_1 %>% filter(!(BirdID %in% exclude_birds))
+day_1$Inj_Lesion <- paste(day_1$Injection, day_1$Lesion, sep = "_")
+
+day_1 <- day_1 %>%
+  left_join(all_coh_6 %>% distinct(BirdID, Condition), by = "BirdID")
+
+day_1 <- rename(day_1, D1_latencies = "Latencies")
+
+day_1 <- day_1 %>%
+  left_join(all_coh_6 %>% distinct(BirdID, Latencies, Behaviour), by = c("BirdID", "Behaviour"))
+
+day_1 <- day_1 %>% mutate(lat_diff = Latencies - D1_latencies)
+
+day_1 <- day_1 %>% mutate(
+  D1_latencies_3min = case_when(
+    D1_latencies >17 ~ 18,
+    TRUE             ~ D1_latencies),
+  Latencies_3min = case_when(
+    Latencies >17 ~ 18,
+    TRUE             ~ Latencies)
+)
+
+
+day1_DBH_SAP_lesionNo<-day_1%>%filter(Inj_Lesion=="anti-DBH-SAP_No")
+unique(day1_DBH_SAP_lesionNo$BirdID)
+day1_control<-day_1%>%filter(Inj_Lesion=="control_No")
+unique(day1_control$BirdID)
+#All DBH-SAPNo, missing 1 control no day 1 video 
+day_1_move <- day_1 %>% filter(Behaviour %in% c("Long Hop", "Short Hop", "Beak Swipe"))
+day_1_vocal <- day_1 %>% filter(Behaviour %in% c("Long Call", "Short Call", "Singing"))
+
+# Diff in day 1 lats bw manip ---------------------------------------------
+day_1_move$Behaviour <- factor(
+  day_1_move$Behaviour, levels = c("Short Hop", "Long Hop", "Beak Swipe")
+)
+day_1_move$Inj_Lesion <- factor(
+  day_1_move$Inj_Lesion, levels = c("control_No", "anti-DBH-SAP_No")
+)
+
+day_1_vocal$Behaviour <- factor(
+  day_1_vocal$Behaviour, levels = c("Short Call", "Long Call", "Singing")
+)
+day_1_vocal$Inj_Lesion <- factor(
+  day_1_vocal$Inj_Lesion, levels = c("control_No", "anti-DBH-SAP_No")
+)
+
+
+# plots  ------------------------------------------------------------------
+ggplot(day_1_long_vocal%>%filter(Inj_Lesion != "anti-DBH-SAP_Yes"), aes(x=day, y=lat_3min, fill = Condition, color = Condition)) +
+  
+  # Mean bars
+  stat_summary(
+    aes(group=Behaviour),
+    fun = mean,
+    geom = "bar",
+    position = dodge,
+    alpha = 0.7,
+    width = 0.5
+  ) +
+  
+  # Error bars
+  stat_summary(
+    aes(group=Behaviour),
+    fun.data = mean_se,
+    geom = "errorbar",
+    position = dodge,
+    width = 0.2
+  ) +
+  
+  # Raw data
+  geom_jitter(
+    aes(group=Behaviour),
+    size = 2,
+    position = position_jitterdodge(
+      jitter.width = 0.3,
+      dodge.width = 0.6
+    ),
+    show.legend = FALSE
+  ) +
+  scale_y_continuous(
+    limits = c(0, 20),
+    breaks = seq(0, 20, by = 5)
+  )+
+  theme_minimal() +
+  theme(
+    text = element_text(size = 14, face = "bold", color = "black"),
+    axis.text.x = element_text(size = 10, color = "black"),
+    legend.position = "none",
+    panel.spacing = unit(1.5, "lines"),
+    panel.grid = element_blank(),
+  ) +
+  
+  labs(
+    x = NULL,
+    y = "Latencies (Trial #)",
+    fill = "Condition"
+  ) +
+  facet_wrap(~interaction(Condition,Inj_Lesion), nrow=1) +
+  #facet_grid(rows=vars(Condition), cols=vars(Behaviour))+
+  scale_x_discrete(
+    labels = c(
+      "D1_latencies" = "Exp",
+      "Latencies" = "Test")
+  )+
+  theme(
+    legend.position = "none",
+    legend.title = element_text(size = 11, face = "bold"),
+    legend.text = element_text(size = 10, face = "bold"),
+    axis.title = element_text(size = 14, face = "bold"),
+    axis.text = element_text(size = 10, face = "bold"),
+    #axis.text.x =element_text(angle=45),
+    strip.background = element_blank(),
+    strip.text = element_text(face = "bold", size = 11),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    axis.line = element_line(colour = "black")
+  )+
+  scale_fill_manual(values = c("N" = "orange", "F" = "purple")) +
+  scale_color_manual(values = c("N" = "orange3", "F" = "purple"))
+
+ggplot(day_1_long_move%>%filter(Inj_Lesion != "anti-DBH-SAP_Yes"), aes(x=interaction(Inj_Lesion,day,Condition), y=lat_3min, fill = Condition, color = Condition)) +
+  
+  # Mean bars
+  stat_summary(
+    aes(group=Behaviour),
+    fun = mean,
+    geom = "bar",
+    position = dodge,
+    alpha = 0.7,
+    width = 0.5
+  ) +
+  
+  # Error bars
+  stat_summary(
+    aes(group=Behaviour),
+    fun.data = mean_se,
+    geom = "errorbar",
+    position = dodge,
+    width = 0.2
+  ) +
+  
+  # Raw data
+  geom_jitter(
+    aes(group=Behaviour),
+    size = 2,
+    position = position_jitterdodge(
+      jitter.width = 0.3,
+      dodge.width = 0.6
+    ),
+    show.legend = FALSE
+  ) +
+  scale_y_continuous(
+    limits = c(0, 20),
+    breaks = seq(0, 20, by = 5)
+  )+
+  theme_minimal() +
+  theme(
+    text = element_text(size = 14, face = "bold", color = "black"),
+    axis.text.x = element_text(size = 10, color = "black"),
+    legend.position = "none",
+    panel.spacing = unit(1.5, "lines"),
+    panel.grid = element_blank(),
+  ) +
+  
+  labs(
+    x = NULL,
+    y = "Latencies (Trial #)",
+    fill = "Condition"
+  ) +
+  #facet_wrap(~interaction(Condition,Inj_Lesion), nrow=1) +
+  #facet_grid(rows=vars(Condition), cols=vars(Behaviour))+
+  scale_x_discrete(
+    labels = c(
+      "D1_latencies" = "Exp",
+      "Latencies" = "Test")
+  )+
+  theme(
+    legend.position = "none",
+    legend.title = element_text(size = 11, face = "bold"),
+    legend.text = element_text(size = 10, face = "bold"),
+    axis.title = element_text(size = 14, face = "bold"),
+    axis.text = element_text(size = 10, face = "bold"),
+    #axis.text.x =element_text(angle=45),
+    strip.background = element_blank(),
+    strip.text = element_text(face = "bold", size = 11),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    axis.line = element_line(colour = "black")
+  )+
+  scale_fill_manual(values = c("N" = "orange", "F" = "purple")) +
+  scale_color_manual(values = c("N" = "orange3", "F" = "purple"))
+
+ggplot(day_1_long_move%>%filter(Inj_Lesion != "anti-DBH-SAP_Yes"), aes(x=interaction(Condition,Inj_Lesion), y=lat_3min, fill = Condition, color = Condition)) +
+  
+  # Mean bars
+  stat_summary(
+    aes(group=day),
+    fun = mean,
+    geom = "bar",
+    position = dodge,
+    alpha = 0.7,
+    width = 0.5
+  ) +
+  
+  # Error bars
+  stat_summary(
+    aes(group=day),
+    fun.data = mean_se,
+    geom = "errorbar",
+    position = dodge,
+    width = 0.2
+  ) +
+  
+  # Raw data
+  geom_jitter(
+    aes(group=day),
+    size = 2,
+    position = position_jitterdodge(
+      jitter.width = 0.3,
+      dodge.width = 0.6
+    ),
+    show.legend = FALSE
+  ) +
+  scale_y_continuous(
+    limits = c(0, 20),
+    breaks = seq(0, 20, by = 5)
+  )+
+  theme_minimal() +
+  theme(
+    text = element_text(size = 14, face = "bold", color = "black"),
+    axis.text.x = element_text(size = 10, color = "black"),
+    legend.position = "none",
+    panel.spacing = unit(1.5, "lines"),
+    panel.grid = element_blank(),
+  ) +
+  
+  labs(
+    x = NULL,
+    y = "Latencies (Trial #)",
+    fill = "Condition"
+  ) +
+  facet_wrap(~Behaviour) +
+  #facet_grid(rows=vars(Condition), cols=vars(Behaviour))+
+  scale_x_discrete(
+    labels = c(
+      "control_No" = "CON",
+      "anti-DBH-SAP_No" = "DBH-SAP")
+  )+
+  theme(
+    legend.position = "none",
+    legend.title = element_text(size = 11, face = "bold"),
+    legend.text = element_text(size = 10, face = "bold"),
+    axis.title = element_text(size = 14, face = "bold"),
+    axis.text = element_text(size = 10, face = "bold"),
+    #axis.text.x =element_text(angle=45),
+    strip.background = element_blank(),
+    strip.text = element_text(face = "bold", size = 11),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    axis.line = element_line(colour = "black")
+  )+
+  scale_fill_manual(values = c("N" = "orange", "F" = "purple")) +
+  scale_color_manual(values = c("N" = "orange3", "F" = "purple"))
+
+
+ggplot(day_1_long_vocal%>%filter(Inj_Lesion != "anti-DBH-SAP_Yes"), aes(x=interaction(Condition,Inj_Lesion), y=lat_3min, fill = Condition, color = Condition)) +
+  
+  # Mean bars
+  stat_summary(
+    aes(group=day),
+    fun = mean,
+    geom = "bar",
+    position = dodge,
+    alpha = 0.7,
+    width = 0.5
+  ) +
+  
+  # Error bars
+  stat_summary(
+    aes(group=day),
+    fun.data = mean_se,
+    geom = "errorbar",
+    position = dodge,
+    width = 0.2
+  ) +
+  
+  # Raw data
+  geom_jitter(
+    aes(group=day),
+    size = 2,
+    position = position_jitterdodge(
+      jitter.width = 0.3,
+      dodge.width = 0.6
+    ),
+    show.legend = FALSE
+  ) +
+  scale_y_continuous(
+    limits = c(0, 20),
+    breaks = seq(0, 20, by = 5)
+  )+
+  theme_minimal() +
+  theme(
+    text = element_text(size = 14, face = "bold", color = "black"),
+    axis.text.x = element_text(size = 10, color = "black"),
+    legend.position = "none",
+    panel.spacing = unit(1.5, "lines"),
+    panel.grid = element_blank(),
+  ) +
+  
+  labs(
+    x = NULL,
+    y = "Latencies (Trial #)",
+    fill = "Condition"
+  ) +
+  facet_wrap(~Behaviour) +
+  #facet_grid(rows=vars(Condition), cols=vars(Behaviour))+
+  scale_x_discrete(
+    labels = c(
+      "control_No" = "CON",
+      "anti-DBH-SAP_No" = "DBH-SAP")
+  )+
+  theme(
+    legend.position = "none",
+    legend.title = element_text(size = 11, face = "bold"),
+    legend.text = element_text(size = 10, face = "bold"),
+    axis.title = element_text(size = 14, face = "bold"),
+    axis.text = element_text(size = 10, face = "bold"),
+    #axis.text.x =element_text(angle=45),
+    strip.background = element_blank(),
+    strip.text = element_text(face = "bold", size = 11),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    axis.line = element_line(colour = "black")
+  )+
+  scale_fill_manual(values = c("N" = "orange", "F" = "purple")) +
+  scale_color_manual(values = c("N" = "orange3", "F" = "purple"))
+
+# stats -------------------------------------------------------------------
+#Full models 
+
+#Movements 
+move_full_model <- glmmTMB(
+  lat ~ day * Inj_Lesion * Behaviour * Condition + (1|BirdID),
+  family = truncated_nbinom2(link = "log"),  
+  data = day_1_long_move%>%filter(Inj_Lesion!="anti-DBH-SAP_Yes")
+)
+Anova(move_full_model)
+
+#Vocalizations 
+vocal_full_model <- glmmTMB(
+  lat ~ day * Inj_Lesion * Behaviour * Condition + (1|BirdID),
+  family = truncated_nbinom2(link = "log"),  
+  data = day_1_long_vocal%>%filter(Inj_Lesion!="anti-DBH-SAP_Yes")
+)
+Anova(vocal_full_model)
+
+#Control
+vocal_full_model_igg <- glmmTMB(
+  lat ~ day * Behaviour * Condition + (1|BirdID),
+  family = truncated_nbinom2(link = "log"),  
+  data = day_1_long_vocal%>%filter(Inj_Lesion=="control_No")
+)
+Anova(vocal_full_model_igg)
+pairs(emmeans(vocal_full_model_igg, ~ day | Condition , adjust = "fdr"))
+
+#DBH
+vocal_full_model_dbh <- glmmTMB(
+  lat ~ day * Behaviour * Condition + (1|BirdID),
+  family = truncated_nbinom2(link = "log"),  
+  data = day_1_long_vocal%>%filter(Inj_Lesion=="anti-DBH-SAP_No")
+)
+Anova(vocal_full_model_dbh)
+
+#Movements 3mins 
+move_full_model_3min <- glmmTMB(
+  lat_3min ~ day * Inj_Lesion * Behaviour * Condition + (1|BirdID),
+  family = truncated_nbinom2(link = "log"),  
+  data = day_1_long_move%>%filter(Inj_Lesion!="anti-DBH-SAP_Yes")
+)
+Anova(move_full_model_3min)
+pairs(emmeans(move_full_model_3min, ~ day | Condition , adjust = "fdr"))
+
+
+
+#Vocalizations 3mins 
+vocal_full_model_3min <- glmmTMB(
+  lat_3min ~ day * Inj_Lesion * Behaviour * Condition + (1|BirdID),
+  family = truncated_nbinom2(link = "log"),  
+  data = day_1_long_vocal%>%filter(Inj_Lesion!="anti-DBH-SAP_Yes")
+)
+Anova(vocal_full_model_3min)
+
+#Control
+vocal_full_model_3min_igg <- glmmTMB(
+  lat_3min ~ day * Behaviour * Condition + (1|BirdID),
+  family = truncated_nbinom2(link = "log"),  
+  data = day_1_long_vocal%>%filter(Inj_Lesion=="control_No")
+)
+Anova(vocal_full_model_3min_igg)
+pairs(emmeans(vocal_full_model_3min_igg, ~ day | Condition , adjust = "fdr"))
+
+#DBH 
+vocal_full_model_3min_DBH <- glmmTMB(
+  lat_3min ~ day * Behaviour * Condition + (1|BirdID),
+  family = truncated_nbinom2(link = "log"),  
+  data = day_1_long_vocal%>%filter(Inj_Lesion=="anti-DBH-SAP_No")
+)
+Anova(vocal_full_model_3min_DBH)
+
+
+
+
+
+
+
 
 # Supplemental lesion latencies sup fig 3 -------------------------------------
 
