@@ -712,6 +712,29 @@ day_1_vocal$Inj_Lesion <- factor(
   day_1_vocal$Inj_Lesion, levels = c("control_No", "anti-DBH-SAP_No")
 )
 
+#Pivot 
+day_1_long <- day_1 %>% 
+  pivot_longer(
+    cols = c("D1_latencies", "Latencies"),
+    names_to = "day",
+    values_to = "lat"
+  )
+
+# 3 mins 
+day_1_long <- day_1_long %>% mutate(
+  lat_3min = case_when(
+    lat >17 ~ 18,
+    TRUE             ~ lat)
+)
+
+#Stats dfs 
+day_1_long_move <- day_1_long %>% filter(Behaviour %in% c("Short Hop", "Long Hop", "Beak Swipe"))
+day_1_long_move$Behaviour <- factor(day_1_long_move$Behaviour, levels=c("Short Hop", "Long Hop", "Beak Swipe"))
+
+day_1_long_vocal <- day_1_long %>% filter(Behaviour %in% c("Short Call", "Long Call", "Singing"))
+day_1_long_vocal$Behaviour <- factor(day_1_long_vocal$Behaviour, levels=c("Short Call", "Long Call", "Singing"))
+
+
 
 # plots  ------------------------------------------------------------------
 ggplot(day_1_long_vocal%>%filter(Inj_Lesion != "anti-DBH-SAP_Yes"), aes(x=day, y=lat_3min, fill = Condition, color = Condition)) +
@@ -1046,7 +1069,8 @@ move_full_model_3min <- glmmTMB(
   data = day_1_long_move%>%filter(Inj_Lesion!="anti-DBH-SAP_Yes")
 )
 Anova(move_full_model_3min)
-pairs(emmeans(move_full_model_3min, ~ day | Condition , adjust = "fdr"))
+emm_move_3min<- pairs(emmeans(move_full_model_3min, ~ day | Condition , adjust = "fdr"))
+confint(pairs(emm_move_3min, adjust = "fdr", type = "response"))
 
 
 
@@ -1065,7 +1089,10 @@ vocal_full_model_3min_igg <- glmmTMB(
   data = day_1_long_vocal%>%filter(Inj_Lesion=="control_No")
 )
 Anova(vocal_full_model_3min_igg)
-pairs(emmeans(vocal_full_model_3min_igg, ~ day | Condition , adjust = "fdr"))
+emm_vocal_3min_igg <- pairs(emmeans(vocal_full_model_3min_igg, ~ day | Condition , adjust = "fdr"))
+confint(pairs(emm_vocal_3min_igg, adjust = "fdr", type = "response"))
+
+
 
 #DBH 
 vocal_full_model_3min_DBH <- glmmTMB(
