@@ -1090,7 +1090,7 @@ vocal_full_model_3min_igg <- glmmTMB(
 )
 Anova(vocal_full_model_3min_igg)
 emm_vocal_3min_igg <- pairs(emmeans(vocal_full_model_3min_igg, ~ day | Condition , adjust = "fdr"))
-confint(pairs(emm_vocal_3min_igg, adjust = "fdr", type = "response"))
+confint(emm_vocal_3min_igg, adjust = "fdr", type = "response")
 
 
 
