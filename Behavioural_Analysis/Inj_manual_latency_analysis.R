@@ -1070,7 +1070,7 @@ move_full_model_3min <- glmmTMB(
 )
 Anova(move_full_model_3min)
 emm_move_3min<- pairs(emmeans(move_full_model_3min, ~ day | Condition , adjust = "fdr"))
-confint(pairs(emm_move_3min, adjust = "fdr", type = "response"))
+confint(emm_move_3min, adjust = "fdr", type = "response")
 
 
 
