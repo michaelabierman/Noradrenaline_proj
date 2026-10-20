@@ -1,2 +1,2 @@
 # Noradrenaline_proj
-Code and statistical models associated with manuscript titled "Noradrenergic inputs into the auditory forebrain modulate social memory formation" 
+Code and statistical models associated with manuscript titled "Noradrenergic inputs into the auditory forebrain modulate the formation and processing of auditory memories " 
